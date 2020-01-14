@@ -4,13 +4,10 @@ Show how to use flutters geolocator plugin in the webview plugin
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+The WebViewGeolocator widget is a drop in replacement for flutters webview.
+It redirects calls on navigator.geolocation JS api to the geolocator plugin.
+This way the webview won't show a alert dialog asking for location permissions.
 
-A few resources to get you started if this is your first Flutter project:
+- [Infos on how to setup the geolocator plugin](https://pub.dev/packages/geolocator)
+- [Infos on how to setup the webview plugin ](https://pub.dev/packages/webview_flutter)
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
