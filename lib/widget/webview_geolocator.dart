@@ -11,7 +11,7 @@ export 'package:webview_flutter/webview_flutter.dart' hide WebView;
 
 class PositionOptions {
   bool enableHighAccuracy = false;
-  int timeout;
+  int timeout = 0;
   int maximumAge = 0;
 
   PositionOptions from(dynamic data) {
@@ -53,6 +53,11 @@ class PositionOptions {
 
     return int.tryParse(value) ?? null;
   }
+}
+
+class PositionResponse {
+  Position position;
+  bool timedOut = false;
 }
 
 class WebViewGeolocator extends StatefulWidget {
@@ -221,8 +226,12 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
     return int.tryParse(value) ?? null;
   }
 
-  Future<Position> getCurrentPosition(PositionOptions positionOptions) async {
-    Position position;
+  Future<PositionResponse> getCurrentPosition(PositionOptions positionOptions) async {
+
+    PositionResponse positionResponse = PositionResponse();
+
+    int timeout = 12000;
+    if (positionOptions.timeout > 0) timeout = positionOptions.timeout;
 
     try {
       Geolocator geolocator = Geolocator()..forceAndroidLocationManager = true;
@@ -233,16 +242,23 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
           geolocationStatus == GeolocationStatus.granted ||
           geolocationStatus == GeolocationStatus.restricted ||
           geolocationStatus == GeolocationStatus.unknown) {
-        position = await geolocator.getCurrentPosition(
-            desiredAccuracy: (positionOptions.enableHighAccuracy
-                ? LocationAccuracy.best
-                : LocationAccuracy.medium));
+        positionResponse.position = await Future.any([
+          geolocator.getCurrentPosition(
+              desiredAccuracy: (positionOptions.enableHighAccuracy
+                  ? LocationAccuracy.best
+                  : LocationAccuracy.medium)),
+          Future.delayed(Duration(milliseconds: timeout), () {
+
+            if (positionOptions.timeout > 0) positionResponse.timedOut = true;
+            return;
+          })
+        ]);
       } else {
         // TODO: Add response that GPS is disabled (or not available) on the device.
       }
     } catch (e) {}
 
-    return position;
+    return positionResponse;
   }
 
   void _geolocationAlertFix() {
@@ -307,14 +323,15 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
 
   void _geolocationGetCurrentPosition(
       int flutterGeolocationIndex, PositionOptions positionOptions) async {
-    Position position = await getCurrentPosition(positionOptions);
+    PositionResponse positionResponse = await getCurrentPosition(positionOptions);
 
-    _geolocationResponse(flutterGeolocationIndex, position, false);
+    _geolocationResponse(
+        flutterGeolocationIndex, positionOptions, positionResponse, false);
   }
 
-  void _geolocationResponse(
-      int flutterGeolocationIndex, Position position, bool watcher) {
-    if (position != null) {
+  void _geolocationResponse(int flutterGeolocationIndex,
+      PositionOptions positionOptions, PositionResponse positionResponse, bool watcher) {
+    if (positionResponse.position != null) {
       String javascript = '''
         function _flutterGeolocationResponse() {
 
@@ -323,25 +340,25 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
           ''']({
             coords: { 
               accuracy: ''' +
-          position.accuracy.toString() +
+          positionResponse.position.accuracy.toString() +
           ''', 
               altitude: ''' +
-          position.altitude.toString() +
+          positionResponse.position.altitude.toString() +
           ''', 
               altitudeAccuracy: null, 
               heading: null, 
               latitude: ''' +
-          position.latitude.toString() +
+          positionResponse.position.latitude.toString() +
           ''', 
               longitude: ''' +
-          position.longitude.toString() +
+          positionResponse.position.longitude.toString() +
           ''', 
               speed: ''' +
-          position.speed.toString() +
+          positionResponse.position.speed.toString() +
           ''' 
             }, 
             timestamp: ''' +
-          position.timestamp.millisecondsSinceEpoch.toString() +
+          positionResponse.position.timestamp.millisecondsSinceEpoch.toString() +
           '''
           });''' +
           (!watcher
@@ -368,12 +385,16 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
 
           if (_flutterGeolocationError[''' +
           flutterGeolocationIndex.toString() +
-          '''] != null) {
-
-            _flutterGeolocationError[''' +
-          flutterGeolocationIndex.toString() +
-          ''']({code: 1, message: 'User denied Geolocationg', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3});
-          }''' +
+          '''] != null) {''' +
+          (positionResponse.timedOut
+              ? "_flutterGeolocationError[" +
+                  flutterGeolocationIndex.toString() +
+                  "]({code: 3, message: 'Request timed out', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3}); "
+              : "_flutterGeolocationError[" +
+                  flutterGeolocationIndex.toString() +
+                  "]({code: 1, message: 'User denied Geolocationg', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3}); "
+          ) +
+          "}" +
           (!watcher
               ? "  _flutterGeolocationSuccess[" +
                   flutterGeolocationIndex.toString() +
@@ -408,7 +429,9 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
         .getPositionStream(locationOptions)
         .listen((Position position) {
       // Send data to each warcher
-      _geolocationResponse(flutterGeolocationIndex, position, true);
+      PositionResponse positionResponse = PositionResponse()..position = position;
+      _geolocationResponse(
+          flutterGeolocationIndex, positionOptions, positionResponse, true);
     });
   }
 
