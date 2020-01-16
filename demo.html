@@ -4,7 +4,8 @@
 
 <p>Click the button to get your coordinates.</p>
 
-<button onclick="getLocation()">Try It</button>
+<button onclick="getLocation()">Get location ignore errors</button><br>
+<button onclick="getLocationOrError()">Get location or errors</button><br>
 
 <p id="demo"></p>
 
@@ -19,9 +20,20 @@ function getLocation() {
   }
 }
 
+function getLocationOrError() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition, showError);
+  } else { 
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+
 function showPosition(position) {
   x.innerHTML = "Latitude: " + position.coords.latitude + 
   "<br>Longitude: " + position.coords.longitude;
+}
+function showError(error) {
+  x.innerHTML = "Error: " + JSON.stringify(error);
 }
 </script>
 
