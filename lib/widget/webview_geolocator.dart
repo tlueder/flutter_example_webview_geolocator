@@ -230,7 +230,7 @@ class _WebViewGeolocatorState extends State<WebViewGeolocator> {
 
     PositionResponse positionResponse = PositionResponse();
 
-    int timeout = 12000;
+    int timeout = 30000;
     if (positionOptions.timeout > 0) timeout = positionOptions.timeout;
 
     try {
