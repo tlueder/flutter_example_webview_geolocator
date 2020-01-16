@@ -19,7 +19,7 @@ class PositionOptions {
 
     return PositionOptions()
       ..enableHighAccuracy = parseBool(data['enableHighAccuracy'] ?? false)
-      ..timeout = parseInt(data['timeout'] ?? null)
+      ..timeout = parseInt(data['timeout'] ?? 0)
       ..maximumAge = parseInt(data['maximumAge'] ?? 0);
   }
 
