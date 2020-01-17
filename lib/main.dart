@@ -15,7 +15,7 @@ class WebViewGeolocatorExample extends StatelessWidget {
       ),
       body: Builder(builder: (BuildContext context) {
         return WebViewGeolocator(
-          initialUrl: 'https://rawcdn.githack.com/tlueder/flutter_example_webview_geolocator/995bb362c38c5fe01e7f782b68875f488f790e3c/demo.html',
+          initialUrl: 'https://rawcdn.githack.com/tlueder/flutter_example_webview_geolocator/fa259e6d138d55c1da2324a81c1cf53068d518ec/demo.html',
           javascriptMode: JavascriptMode.unrestricted,
         );
       }),
