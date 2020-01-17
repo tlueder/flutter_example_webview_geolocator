@@ -4,13 +4,20 @@
 
 <p>Click the button to get your coordinates.</p>
 
-<button onclick="getLocation()">Get location ignore errors</button><br>
-<button onclick="getLocationOrError()">Get location or errors</button><br>
+<button onclick="getLocation()">Get location ignore errors</button><br><br><br>
+<button onclick="getLocationOrError()">Get location or errors</button><br><br><br>
+<button onclick="getLocationOrErrorWithOptions()">Get location or errors with options</button><br><br><br>
 
 <p id="demo"></p>
 
 <script>
 var x = document.getElementById("demo");
+
+var options = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
 
 function getLocation() {
   if (navigator.geolocation) {
@@ -23,6 +30,14 @@ function getLocation() {
 function getLocationOrError() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition, showError);
+  } else { 
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+
+function getLocationOrErrorWithOptions() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition, showError, options);
   } else { 
     x.innerHTML = "Geolocation is not supported by this browser.";
   }
